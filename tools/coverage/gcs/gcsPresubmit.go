@@ -34,15 +34,16 @@ const (
 	gcsUrlHost            = "storage.cloud.google.com/"
 )
 
-type PresubmitBuild struct {
+type GcsPreSubmitBuild struct {
 	GcsBuild
-	Artifacts     GcsArtifacts
-	PostSubmitJob string
+	Artifacts GcsArtifacts
 }
 
 type PreSubmit struct {
 	githubPr.GithubPr
-	PresubmitBuild
+	GcsPreSubmitBuild
+
+	PostSubmitJob string
 }
 
 func (p *PreSubmit) relDirOfArtifacts() (result string) {

@@ -27,8 +27,7 @@ import (
 )
 
 // convert a file path from profile format to github format.
-// Equivalent to remove all path prefix up to and including the repo name
-// e.g.
+// scenarios:
 //   knative.dev/$REPO_NAME/pkg/... -> pkg/...
 //   github.com/$REPO_OWNER/$REPO_NAME/pkg/... -> pkg/...
 func FilePathProfileToGithub(file string) string {
@@ -46,7 +45,7 @@ func FilePathProfileToGithub(file string) string {
 // use var for the following function so that it can be mocked in the unit test
 var getRepoRoot = func() (string, error) {
 	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
-	return string(out), err
+	return strings.TrimSpace(string(out)), err
 }
 
 // GetRepoPath gets repository path relative to GOPATH/src
@@ -59,9 +58,11 @@ func GetRepoPath() (string, error) {
 	if gopath == "" {
 		return "", errors.New("GOPATH is empty")
 	}
-	relPath, err := filepath.Rel(path.Join(gopath, "src"), string(repoRoot))
+
+	relPath, err := filepath.Rel(path.Join(gopath, "src"), repoRoot)
 	if err != nil {
 		return "", err
 	}
+	log.Printf("repo: %s, gopath: %s, relative: %s", repoRoot, gopath, relPath)
 	return strings.TrimSpace(relPath), nil
 }

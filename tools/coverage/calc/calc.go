@@ -53,8 +53,9 @@ func CovList(f *artifacts.ProfileReader, keyProfileFile *os.File,
 	for scanner.Scan() {
 		row := scanner.Text()
 		blk := toBlock(row)
-		isConcerned := updateConcernedFiles(concernedFiles,
-			blk.filePathInGithub(), isPresubmit)
+		//isConcerned := updateConcernedFiles(concernedFiles, blk.filePathInGithub(), isPresubmit)
+		isConcerned := updateConcernedFiles(concernedFiles, blk.fileName, isPresubmit)
+
 		if isConcerned {
 			blk.addToGroupCov(g)
 			writeLine(keyProfileFile, row)

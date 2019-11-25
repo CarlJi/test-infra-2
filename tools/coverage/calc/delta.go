@@ -23,7 +23,7 @@ import (
 	"sort"
 	"strings"
 
-	"knative.dev/test-infra/tools/coverage/githubUtil"
+	"knative.dev/test-infra/tools/coverage/githubUtil/githubPr"
 	"knative.dev/test-infra/tools/coverage/str"
 )
 
@@ -119,12 +119,61 @@ func NewGroupChanges(baseList *CoverageList, newList *CoverageList) *GroupChange
 	}
 }
 
-// processChangedFiles checks each entry in GroupChanges and see if it is
+// generateCoverDiffReport checks each entry in GroupChanges and see if it is
 // include in the github commit. If yes, then include that in the covbot report
-func (changes *GroupChanges) processChangedFiles(githubFilePaths map[string]bool) (string, bool, bool) {
-	log.Printf("\nFinding joining set of changed files from profile[count=%d] & github\n", len(changes.Changed))
+//func (changes *GroupChanges) generateCoverDiffReport(githubFilePaths map[string]bool) (string, bool, bool) {
+//	log.Printf("Finding joining set of changed files from profile[count=%d] & github\n", len(changes.Changed))
+//	rows := []string{
+//		"The following is the coverage report on the affected files.",
+//		fmt.Sprintf("Say `/test %s` to re-run this coverage report", os.Getenv("JOB_NAME")),
+//		"",
+//		"File | Old Coverage | New Coverage | Delta",
+//		"---- |:------------:|:------------:|:-----:",
+//	}
+//
+//	isEmpty, isCoverageLow := true, false
+//
+//	// empty githubFilePaths indicates the workflow is running without a github connection
+//	noRepoConnection := len(githubFilePaths) == 0
+//	if noRepoConnection {
+//		log.Printf("No github connection. Listing each file with a coverage change.")
+//	}
+//
+//	for i, inc := range changes.Changed {
+//		log.Printf("inc.base.Name: %s", inc.base.name)
+//		pathFromProfile := githubUtil.FilePathProfileToGithub(inc.base.Name())
+//
+//		if noRepoConnection {
+//			fmt.Printf("File with coverage change: %s", pathFromProfile)
+//		} else {
+//			fmt.Printf("Checking if this file is in github change list: %s", pathFromProfile)
+//		}
+//		if noRepoConnection || githubFilePaths[pathFromProfile] {
+//			fmt.Printf("\tYes!")
+//			rows = append(rows, inc.githubBotRow(i, pathFromProfile))
+//			isEmpty = false
+//
+//			if inc.new.IsCoverageLow(changes.NewGroup.covThresholdInt) {
+//				fmt.Printf("\t(Coverage low!)")
+//				isCoverageLow = true
+//			}
+//		} else {
+//			fmt.Printf("\tNo")
+//		}
+//		fmt.Printf("\n")
+//	}
+//	fmt.Println("End of Finding joining set of changed files from profile & github")
+//	rows = append(rows, "")
+//
+//	return strings.Join(rows, "\n"), isEmpty, isCoverageLow
+//}
+
+// generateCoverDiffReport checks each entry in GroupChanges and see if it is
+// include in the github commit. If yes, then include that in the covbot report
+func (changes *GroupChanges) generateCoverDiffReport(githubFilePaths map[string]bool) (string, bool, bool) {
+	log.Printf("Finding joining set of changed files from profile[count=%d] & github\n", len(changes.Changed))
 	rows := []string{
-		"The following is the coverage report on the affected files.",
+		githubPr.CoverageCommentsPrefix,
 		fmt.Sprintf("Say `/test %s` to re-run this coverage report", os.Getenv("JOB_NAME")),
 		"",
 		"File | Old Coverage | New Coverage | Delta",
@@ -133,33 +182,16 @@ func (changes *GroupChanges) processChangedFiles(githubFilePaths map[string]bool
 
 	isEmpty, isCoverageLow := true, false
 
-	// empty githubFilePaths indicates the workflow is running without a github connection
-	noRepoConnection := len(githubFilePaths) == 0
-	if noRepoConnection {
-		log.Printf("No github connection. Listing each file with a coverage change.")
-	}
-
 	for i, inc := range changes.Changed {
-		pathFromProfile := githubUtil.FilePathProfileToGithub(inc.base.Name())
 
-		if noRepoConnection {
-			fmt.Printf("File with coverage change: %s", pathFromProfile)
-		} else {
-			fmt.Printf("Checking if this file is in github change list: %s", pathFromProfile)
-		}
-		if noRepoConnection || githubFilePaths[pathFromProfile] {
-			fmt.Printf("\tYes!")
-			rows = append(rows, inc.githubBotRow(i, pathFromProfile))
-			isEmpty = false
+		log.Printf("inc.base.Name: %s", inc.base.name)
+		rows = append(rows, inc.githubBotRow(i, inc.base.name))
+		isEmpty = false
 
-			if inc.new.IsCoverageLow(changes.NewGroup.covThresholdInt) {
-				fmt.Printf("\t(Coverage low!)")
-				isCoverageLow = true
-			}
-		} else {
-			fmt.Printf("\tNo")
+		if inc.new.IsCoverageLow(changes.NewGroup.covThresholdInt) {
+			fmt.Printf("\t(Coverage low!)")
+			isCoverageLow = true
 		}
-		fmt.Printf("\n")
 	}
 	fmt.Println("End of Finding joining set of changed files from profile & github")
 	rows = append(rows, "")
@@ -178,11 +210,10 @@ func (inc Incremental) githubBotRow(index int, filepath string) string {
 
 // ContentForGithubPost constructs the message covbot posts
 func (changes *GroupChanges) ContentForGithubPost(files map[string]bool) (string, bool, bool) {
-	fmt.Printf("\n%d files changed, reported by github:\n", len(files))
+	log.Printf("%d files changed, reported by github:", len(files))
 	for githubFilePath := range files {
-		fmt.Printf("%s\t", githubFilePath)
+		log.Printf("%s", githubFilePath)
 	}
 
-	fmt.Printf("\n\n")
-	return changes.processChangedFiles(files)
+	return changes.generateCoverDiffReport(files)
 }

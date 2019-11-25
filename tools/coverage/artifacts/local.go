@@ -29,13 +29,9 @@ type LocalArtifacts struct {
 	Artifacts
 }
 
-func NewLocalArtifacts(directory string, ProfileName string,
-	KeyProfileName string, CovStdoutName string) *LocalArtifacts {
-	return &LocalArtifacts{*New(
-		directory,
-		ProfileName,
-		KeyProfileName,
-		CovStdoutName)}
+func NewLocalArtifacts(directory string, ProfileName string, KeyProfileName string, CovStdoutName string) *LocalArtifacts {
+	artifacts := New(directory, ProfileName, KeyProfileName, CovStdoutName)
+	return &LocalArtifacts{*artifacts}
 }
 
 // ProfileReader create and returns a ProfileReader by opening the file stored in profile path
@@ -49,7 +45,7 @@ func (arts *LocalArtifacts) ProfileReader() *ProfileReader {
 }
 
 func (arts *LocalArtifacts) ProfileName() string {
-	return arts.profileName
+	return arts.profile
 }
 
 // KeyProfileCreator creates a key profile file that will be used to hold a

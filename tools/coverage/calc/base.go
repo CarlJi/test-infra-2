@@ -20,6 +20,7 @@ package calc
 
 import (
 	"fmt"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -57,9 +58,34 @@ func (blk *codeBlock) addToGroupCov(g *CoverageList) {
 func updateConcernedFiles(concernedFiles map[string]bool, filePath string, isPresubmit bool) bool {
 	// get linguist generated attribute value for the file.
 	// If true => needs to be skipped for coverage.
-	isConcerned, ok := concernedFiles[filePath]
-	if ok {
-		return true
+	//isConcerned, ok := concernedFiles[filePath]
+	//if ok {
+	//	return true
+	//}
+
+	// TODO(CarlJi): 通过profile file定位文件在github库里的路径，会因各库代码组织结构的不同，而复杂化
+	// 目前有看到两种repo组织方式：
+	// 1. github.com/<repo>/pkg/...  => 文件在github库里的路径是: pkg/...
+	// 2. <repo>/src/github.com/pkg/... => 文件在github库里的路径是: github.com/pkg/...
+	// 如何基于文件在github的路径，gopath，repo等信息，来精确匹配cover profle 中pkg信息与文件在代码库的路径呢？
+	var isConcerned bool
+	for fileInGithub, isConcerned := range concernedFiles {
+		if !isConcerned {
+			continue
+		}
+
+		// check rule 1:
+		// src/filepath == fileInGithub
+		if fileInGithub == path.Join("src", filePath) {
+			return true
+		}
+
+		// check rule 1:
+		// github.com/<repo>/pkg/...
+		// TODO(CarlJI): 有可能不精准
+		if strings.HasSuffix(filePath, fileInGithub) {
+			return true
+		}
 	}
 
 	// presubmit already have concerned files defined.

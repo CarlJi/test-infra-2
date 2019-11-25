@@ -35,13 +35,12 @@ type Intf interface {
 
 type Artifacts struct {
 	directory      string
-	profileName    string
+	profile        string
 	keyProfileName string
 	covStdoutName  string
 }
 
-func New(directory string, profileName string, keyProfileName string,
-	covStdoutName string) *Artifacts {
+func New(directory, profileName, keyProfileName, covStdoutName string) *Artifacts {
 	return &Artifacts{
 		directory,
 		profileName,
@@ -58,7 +57,7 @@ func (arts *Artifacts) Directory() string {
 }
 
 func (arts *Artifacts) ProfilePath() string {
-	return path.Join(arts.directory, arts.profileName)
+	return path.Join(arts.profile)
 }
 
 func (arts *Artifacts) KeyProfilePath() string {

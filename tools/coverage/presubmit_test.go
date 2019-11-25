@@ -64,7 +64,7 @@ func TestRunPresubmit(t *testing.T) {
 				Ctx:           context.Background(),
 			}
 
-			pbuild := gcs.PresubmitBuild{
+			pbuild := gcs.GcsPresubmitBuild{
 				GcsBuild: gcs.GcsBuild{
 					Client: gcsFakes.NewFakeStorageClient(),
 					Bucket: gcsFakes.FakeGcsBucketName,
@@ -81,8 +81,8 @@ func TestRunPresubmit(t *testing.T) {
 			}
 
 			preSubmit := &gcs.PreSubmit{
-				GithubPr:       *repoData,
-				PresubmitBuild: pbuild,
+				GithubPr:          *repoData,
+				GcsPresubmitBuild: pbuild,
 			}
 
 			arts := artsTest.LocalArtsForTest("TestRunPresubmit")
@@ -111,7 +111,7 @@ func TestK8sGcsAddress(t *testing.T) {
 		Ctx:           context.Background(),
 	}
 
-	pbuild := gcs.PresubmitBuild{
+	pbuild := gcs.GcsPresubmitBuild{
 		GcsBuild: gcs.GcsBuild{
 			Client: gcsFakes.NewFakeStorageClient(),
 			Bucket: gcsFakes.FakeGcsBucketName,
@@ -128,8 +128,8 @@ func TestK8sGcsAddress(t *testing.T) {
 	}
 
 	presubmitData := &gcs.PreSubmit{
-		GithubPr:       *repoData,
-		PresubmitBuild: pbuild,
+		GithubPr:          *repoData,
+		GcsPresubmitBuild: pbuild,
 	}
 	presubmitData.Build = 1286
 	got := presubmitData.UrlGcsLineCovLinkWithMarker(3)

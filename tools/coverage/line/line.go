@@ -41,8 +41,7 @@ func CreateLineCovFile(arts *artifacts.LocalArtifacts) error {
 	return err
 }
 
-func GenerateLineCovLinks(
-	presubmitBuild *gcs.PreSubmit, g *calc.CoverageList) {
+func GenerateLineCovLinks(presubmitBuild *gcs.PreSubmit, g *calc.CoverageList) {
 	calc.SortCoverages(*g.Group())
 	for i := 0; i < len(*g.Group()); i++ {
 		g.Item(i).SetLineCovLink(presubmitBuild.UrlGcsLineCovLinkWithMarker(i))

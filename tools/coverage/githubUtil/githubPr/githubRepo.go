@@ -17,15 +17,17 @@ package githubPr
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-github/github"
 	"knative.dev/test-infra/tools/coverage/githubUtil/githubClient"
 	"knative.dev/test-infra/tools/coverage/logUtil"
 )
+
+const CoverageCommentsPrefix = "The following is the coverage report on the affected files."
 
 type GithubPr struct {
 	RobotUserName string
@@ -40,8 +42,7 @@ func (data *GithubPr) PrStr() string {
 	return strconv.Itoa(data.Pr)
 }
 
-func New(githubTokenLocation, repoOwner, repoName, prNumStr,
-	botUserName string) *GithubPr {
+func New(githubTokenLocation, repoOwner, repoName, prNumStr, botUserName string) *GithubPr {
 	ctx := context.Background()
 
 	prNum, err := strconv.Atoi(prNumStr)
@@ -88,16 +89,15 @@ func (data *GithubPr) postComment(content string) (err error) {
 func (data *GithubPr) removeAllBotComments() (nRemoved int, err error) {
 	log.Println("removing all bot comments")
 	comments, _, err := data.GithubClient.Issues.ListComments(data.Ctx, data.RepoOwner, data.RepoName, data.Pr, nil)
-
 	if err != nil {
-		logUtil.LogFatalf("data.GithubClient.Issues.ListComments(..."+
-			") returns error: %v\n", err)
+		logUtil.LogFatalf("data.GithubClient.Issues.ListComments returns error: %v", err)
 	}
 
 	nRemoved = 0
 	for _, cmt := range comments {
 		userName := *cmt.User.Login
-		if userName == data.RobotUserName {
+		// TODO(CarlJi): 因为有可能会用相同的github bot账号做多种事情，所以这里只删除coverage相关的comments
+		if userName == data.RobotUserName && strings.HasPrefix(cmt.GetBody(), CoverageCommentsPrefix) {
 			log.Printf("TO DEL comment: <author=%s> %s\n", userName, *cmt.Body)
 			_, err = data.GithubClient.Issues.DeleteComment(
 				data.Ctx, data.RepoOwner, data.RepoName, cmt.GetID())
@@ -112,8 +112,7 @@ func (data *GithubPr) removeAllBotComments() (nRemoved int, err error) {
 		}
 	}
 
-	log.Printf(
-		"Removed %d comments by robot <%s>", nRemoved, data.RobotUserName)
+	log.Printf("Removed %d comments by robot <%s>", nRemoved, data.RobotUserName)
 
 	return
 }
@@ -131,12 +130,17 @@ func (data *GithubPr) CleanAndPostComment(content string) (err error) {
 func getGithubToken(githubTokenLocation string) (res string, err error) {
 	buf, err := ioutil.ReadFile(githubTokenLocation)
 	if err != nil {
-		fmt.Printf("github token file cannot be found: %v\n", err)
+		log.Printf("github token file cannot be found: %v\n", err)
 		return
 	}
 	res = string(buf)
 	if len(res) != 40 {
-		fmt.Printf("Warning: token len = %d, which is different from 40\n", len(res))
+		log.Printf("Warning: token len = %d, which is different from 40\n", len(res))
+		if len(res) == 41 {
+			log.Println("Warning: probably because there is a \\n in the end, try trim it")
+			res = string(buf[0:40])
+
+		}
 	}
 	return
 }
