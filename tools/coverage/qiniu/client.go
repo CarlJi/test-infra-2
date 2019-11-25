@@ -109,7 +109,6 @@ func (q *Client) listEntries(prefix string, delimiter string) ([]storage.ListIte
 func (q *Client) GetAccessUrl(key string, timeout time.Duration) string {
 	deadline := time.Now().Add(timeout).Unix()
 	return storage.MakePrivateURL(auth.New(q.cfg.AccessKey, q.cfg.SecretKey), q.cfg.Domain, key, deadline)
-
 }
 
 type LogHistoryTemplate struct {

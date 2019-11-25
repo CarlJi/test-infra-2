@@ -18,7 +18,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,20 +44,16 @@ const (
 func main() {
 	// Enable line numbers in logging
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
 	log.Println("entering code coverage main")
 
 	postSubmitJobName := flag.String("postsubmit-job-name", defaultPostSubmitJobName, "name of the prow job")
-	//artifactsDir := flag.String("artifacts", defaultArtifactsDir, "directory for artifacts")
 	coverageTargetDir := flag.String("cov-target", defaultCoverageTargetDir, "target directory for test coverage")
 	localCoverageProfile := flag.String("local-profile", defaultCoverageProfileName, "local coverage profile to analyze")
 	githubTokenPath := flag.String("github-token", "", "path to token to access github repo")
 	covThreshold := flag.Int("cov-threshold-percentage", defaultCovThreshold, "token to access GitHub repo")
 	postingBotUserName := flag.String("posting-robot", "qiniu-bot", "github user name for coverage robot")
 	remoteProfileName := flag.String("remote-profile-name", "filtered.cov", "code coverage profile file name in cloud")
-
 	qiniuConfig := flag.String("qiniu-credential", "", "path to credential file to access qiniu cloud")
-
 	flag.Parse()
 
 	log.Printf("container flag list:  postSubmitJobName=%s; "+
@@ -86,19 +81,12 @@ func main() {
 		defaultStdoutRedirect,
 	)
 
-	log.Printf("localArtifacts: %#v", localArtifacts)
-
-	// run go test for target package
-	//localArtifacts.ProduceProfileFile(*coverageTargetDir)
-
-	//log.Printf("localArtifacts: %#v", localArtifacts)
-
 	log.Printf("Running workflow: %s\n", jobType)
 	switch jobType {
 	case "periodic":
 		log.Printf("job type is %v, producing testsuite xml...\n", jobType)
 		testgrid.ProfileToTestsuiteXML(localArtifacts, *covThreshold)
-	default:
+	case "presubmit":
 		if *qiniuConfig == "" {
 			logUtil.LogFatalf("qiniu credential file must be provided")
 		}
@@ -130,23 +118,6 @@ func main() {
 
 		prData := githubPr.New(*githubTokenPath, repoOwner, repoName, pr, *postingBotUserName)
 
-		//gcsData := &cloud.GcsPresubmitBuild{
-		//	GcsBuild: cloud.GcsBuild{
-		//		Client:       cloud.NewClient(prData.Ctx),
-		//		Bucket:       *gcsBucketName,
-		//		Job:          jobName,
-		//		Build:        build,
-		//		CovThreshold: *covThreshold,
-		//	},
-		//	PostSubmitJob: *postSubmitJobName,
-		//}
-		//presubmit := &cloud.PreSubmit{
-		//	GithubPr:          *prData,
-		//	GcsPresubmitBuild: *gcsData,
-		//}
-
-		//presubmit.Artifacts = *presubmit.MakeGcsArtifacts(*localArtifacts)
-
 		entry := PreSubmitEntry{
 			PostSubmitJob:          *postSubmitJobName,
 			PostSubmitCoverProfile: *remoteProfileName,
@@ -169,7 +140,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+	case "postsubmit":
+		log.Printf("job type %s, do nothing", jobType)
 	}
 
-	fmt.Println("end of code coverage main")
+	log.Println("end of code coverage main")
 }
