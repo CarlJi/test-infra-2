@@ -31,13 +31,11 @@ import (
 )
 
 const (
-	keyCovProfileFileName    = "key-cover-profile.txt"
-	defaultStdoutRedirect    = "stdout.txt"
-	defaultCoverageTargetDir = "."
-	defaultGcsBucket         = "knative-prow"
-	defaultPostSubmitJobName = ""
-	defaultCovThreshold      = 50
-	//defaultArtifactsDir        = "./artifacts/"
+	keyCovProfileFileName      = "key-cover-profile.txt"
+	defaultStdoutRedirect      = "stdout.txt"
+	defaultCoverageTargetDir   = "."
+	defaultPostSubmitJobName   = ""
+	defaultCovThreshold        = 0
 	defaultCoverageProfileName = "coverage_profile.txt"
 )
 
@@ -49,11 +47,11 @@ func main() {
 	postSubmitJobName := flag.String("postsubmit-job-name", defaultPostSubmitJobName, "name of the prow job")
 	coverageTargetDir := flag.String("cov-target", defaultCoverageTargetDir, "target directory for test coverage")
 	localCoverageProfile := flag.String("local-profile", defaultCoverageProfileName, "local coverage profile to analyze")
-	githubTokenPath := flag.String("github-token", "", "path to token to access github repo")
-	covThreshold := flag.Int("cov-threshold-percentage", defaultCovThreshold, "token to access GitHub repo")
+	githubTokenPath := flag.String("github-token", "/etc/github/oauth", "path to token to access github repo")
+	covThreshold := flag.Int("coverage-threshold-percentage", defaultCovThreshold, "token to access GitHub repo")
 	postingBotUserName := flag.String("posting-robot", "qiniu-bot", "github user name for coverage robot")
 	remoteProfileName := flag.String("remote-profile-name", "filtered.cov", "code coverage profile file name in cloud")
-	qiniuConfig := flag.String("qiniu-credential", "", "path to credential file to access qiniu cloud")
+	qiniuConfig := flag.String("qiniu-credential", "/etc/qiniuconfig/qiniu.json", "path to credential file to access qiniu cloud")
 	flag.Parse()
 
 	log.Printf("container flag list:  postSubmitJobName=%s; "+
