@@ -50,6 +50,7 @@ type PreSubmitEntry struct {
 	github  *githubPr.GithubPr
 }
 
+// CreateLineCovFile create a coverage profile base on the local artifact
 func (entry *PreSubmitEntry) CreateLineCovFile(arts *artifacts.LocalArtifacts) error {
 	pathKeyProfile := arts.KeyProfilePath()
 	pathLineCov := path.Join(os.Getenv("ARTIFACTS"), entry.HtmlProfile())

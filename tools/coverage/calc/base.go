@@ -20,6 +20,7 @@ package calc
 
 import (
 	"fmt"
+	"log"
 	"path"
 	"sort"
 	"strconv"
@@ -102,6 +103,9 @@ func updateConcernedFiles(concernedFiles map[string]bool, filePath string, isPre
 // convert a line in profile file to a codeBlock struct
 func toBlock(line string) (res *codeBlock) {
 	slice := strings.Split(line, " ")
+	if len(slice) != 3 {
+		log.Fatalf("the profile line %s is not expected", line)
+	}
 	blockName := slice[0]
 	nStmts, _ := strconv.Atoi(slice[1])
 	coverageCount, _ := strconv.Atoi(slice[2])
