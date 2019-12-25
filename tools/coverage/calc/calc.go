@@ -32,7 +32,7 @@ import (
 // that only includes files in corresponding github commit,
 // less those files that are excluded from coverage calculation
 func CovList(f *artifacts.ProfileReader, keyProfileFile *os.File,
-	concernedFiles map[string]bool, covThresInt int) (g *CoverageList) {
+	concernedFiles map[string]bool, covThresInt int) (g *CoverageList, err error) {
 
 	defer f.Close()
 	defer keyProfileFile.Close()
@@ -52,7 +52,10 @@ func CovList(f *artifacts.ProfileReader, keyProfileFile *os.File,
 	g = NewCoverageList("localSummary", concernedFiles, covThresInt)
 	for scanner.Scan() {
 		row := scanner.Text()
-		blk := toBlock(row)
+		blk, err := toBlock(row)
+		if err != nil {
+			return nil, err
+		}
 		//isConcerned := updateConcernedFiles(concernedFiles, blk.filePathInGithub(), isPresubmit)
 		isConcerned := updateConcernedFiles(concernedFiles, blk.fileName, isPresubmit)
 

@@ -42,7 +42,11 @@ func (inc Incremental) deltaForCovbot() string {
 	if inc.base.nAllStmts == 0 {
 		return ""
 	}
-	return str.PercentageForCovbotDelta(inc.delta())
+	delta := inc.delta()
+	if delta == float32(0) {
+		return ""
+	}
+	return str.PercentageForCovbotDelta(delta)
 }
 
 func (inc Incremental) oldCovForCovbot() string {
@@ -89,11 +93,11 @@ func NewGroupChanges(baseList *CoverageList, newList *CoverageList) *GroupChange
 	for _, newCov := range newList.group {
 		newCovName := newCov.Name()
 		baseCov, ok := baseFilesMap[newCovName]
-		isNewFile := false
+		// isNewFile := false
 		if !ok {
 			added = append(added, newCov)
 			baseCov = *newCoverage(newCovName)
-			isNewFile = true
+			// isNewFile = true
 		}
 
 		// after all the deletions, the leftover would be the elements that only exists in base group,
@@ -101,12 +105,16 @@ func NewGroupChanges(baseList *CoverageList, newList *CoverageList) *GroupChange
 		delete(baseFilesMap, newCovName)
 
 		incremental := Incremental{baseCov, newCov}
-		delta := incremental.delta()
-		if delta == 0 && !isNewFile {
-			unchanged = append(unchanged, newCov)
-		} else {
-			changed = append(changed, incremental)
-		}
+		// delta := incremental.delta()
+		// if delta == 0 && !isNewFile {
+		// unchanged = append(unchanged, newCov)
+		// } else {
+		// changed = append(changed, incremental)
+		// }
+
+		// CarlJi: even the old file and its coverate rate is zero,
+		// we also want to comment it for remind
+		changed = append(changed, incremental)
 	}
 
 	return &GroupChanges{
@@ -118,55 +126,6 @@ func NewGroupChanges(baseList *CoverageList, newList *CoverageList) *GroupChange
 		NewGroup:  newList,
 	}
 }
-
-// generateCoverDiffReport checks each entry in GroupChanges and see if it is
-// include in the github commit. If yes, then include that in the covbot report
-//func (changes *GroupChanges) generateCoverDiffReport(githubFilePaths map[string]bool) (string, bool, bool) {
-//	log.Printf("Finding joining set of changed files from profile[count=%d] & github\n", len(changes.Changed))
-//	rows := []string{
-//		"The following is the coverage report on the affected files.",
-//		fmt.Sprintf("Say `/test %s` to re-run this coverage report", os.Getenv("JOB_NAME")),
-//		"",
-//		"File | Old Coverage | New Coverage | Delta",
-//		"---- |:------------:|:------------:|:-----:",
-//	}
-//
-//	isEmpty, isCoverageLow := true, false
-//
-//	// empty githubFilePaths indicates the workflow is running without a github connection
-//	noRepoConnection := len(githubFilePaths) == 0
-//	if noRepoConnection {
-//		log.Printf("No github connection. Listing each file with a coverage change.")
-//	}
-//
-//	for i, inc := range changes.Changed {
-//		log.Printf("inc.base.Name: %s", inc.base.name)
-//		pathFromProfile := githubUtil.FilePathProfileToGithub(inc.base.Name())
-//
-//		if noRepoConnection {
-//			fmt.Printf("File with coverage change: %s", pathFromProfile)
-//		} else {
-//			fmt.Printf("Checking if this file is in github change list: %s", pathFromProfile)
-//		}
-//		if noRepoConnection || githubFilePaths[pathFromProfile] {
-//			fmt.Printf("\tYes!")
-//			rows = append(rows, inc.githubBotRow(i, pathFromProfile))
-//			isEmpty = false
-//
-//			if inc.new.IsCoverageLow(changes.NewGroup.covThresholdInt) {
-//				fmt.Printf("\t(Coverage low!)")
-//				isCoverageLow = true
-//			}
-//		} else {
-//			fmt.Printf("\tNo")
-//		}
-//		fmt.Printf("\n")
-//	}
-//	fmt.Println("End of Finding joining set of changed files from profile & github")
-//	rows = append(rows, "")
-//
-//	return strings.Join(rows, "\n"), isEmpty, isCoverageLow
-//}
 
 // generateCoverDiffReport checks each entry in GroupChanges and see if it is
 // include in the github commit. If yes, then include that in the covbot report

@@ -20,7 +20,6 @@ package calc
 
 import (
 	"fmt"
-	"log"
 	"path"
 	"sort"
 	"strconv"
@@ -101,10 +100,10 @@ func updateConcernedFiles(concernedFiles map[string]bool, filePath string, isPre
 }
 
 // convert a line in profile file to a codeBlock struct
-func toBlock(line string) (res *codeBlock) {
+func toBlock(line string) (res *codeBlock, err error) {
 	slice := strings.Split(line, " ")
 	if len(slice) != 3 {
-		log.Fatalf("the profile line %s is not expected", line)
+		return nil, fmt.Errorf("the profile line %s is not expected", line)
 	}
 	blockName := slice[0]
 	nStmts, _ := strconv.Atoi(slice[1])
@@ -113,7 +112,7 @@ func toBlock(line string) (res *codeBlock) {
 		fileName:      blockName[:strings.Index(blockName, ":")],
 		numStatements: nStmts,
 		coverageCount: coverageCount,
-	}
+	}, nil
 }
 
 // Coverage stores test coverage summary data for one file

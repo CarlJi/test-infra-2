@@ -102,11 +102,14 @@ func (entry *PreSubmitEntry) RunPresubmit(arts *artifacts.LocalArtifacts) (bool,
 	}
 
 	// filter the local cover profile base on files in PR list
-	gNew := calc.CovList(arts.ProfileReader(), arts.KeyProfileCreator(), concernedFiles, entry.CovThreshold)
+	gNew, err := calc.CovList(arts.ProfileReader(), arts.KeyProfileCreator(), concernedFiles, entry.CovThreshold)
+	if err != nil {
+		logUtil.LogFatalf("calc.CovList local profile failed, err:%v", err)
+	}
 	log.Printf("gNew: %#v", gNew)
 
 	// generate html page for the local filtered cover profile
-	err := entry.CreateLineCovFile(arts)
+	err = entry.CreateLineCovFile(arts)
 	if err != nil {
 		log.Fatalf("line.CreateLineCovFile failed, err: %v", err)
 	}
@@ -122,8 +125,10 @@ func (entry *PreSubmitEntry) RunPresubmit(arts *artifacts.LocalArtifacts) (bool,
 
 	remoteProfileReader := artifacts.NewProfileReader(ioutil.NopCloser(bytes.NewReader(remoteProfile)))
 	// filter the remote cover profile base on files in PR list
-	gBase := calc.CovList(remoteProfileReader, nil, concernedFiles, entry.CovThreshold)
-
+	gBase, err := calc.CovList(remoteProfileReader, nil, concernedFiles, entry.CovThreshold)
+	if err != nil {
+		logUtil.LogFatalf("filed to calc the coveraga for base profile, err: %v, and please check your profile content: \n %s", err, string(remoteProfile))
+	}
 	log.Printf("gBase: %#v", gBase)
 	// calculate the coverage delta between local and remote
 	changes := calc.NewGroupChanges(gBase, gNew)

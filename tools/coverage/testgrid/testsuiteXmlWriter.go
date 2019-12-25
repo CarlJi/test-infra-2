@@ -88,12 +88,15 @@ func toTestsuite(g *calc.CoverageList, dirs []string) *junit.TestSuite {
 // ProfileToTestsuiteXML uses coverage profile (and it's corresponding stdout) to produce junit xml
 // which serves as the input for test coverage testgrid
 func ProfileToTestsuiteXML(arts *artifacts.LocalArtifacts, covThres int) {
-	groupCov := calc.CovList(
+	groupCov, err := calc.CovList(
 		artifacts.NewProfileReader(arts.ProfileReader()),
 		nil,
 		nil,
 		covThres,
 	)
+	if err != nil {
+		logUtil.LogFatalf("calc.CovList failed: %v", err)
+	}
 	f, err := os.Create(arts.JunitXmlForTestgridPath())
 	if err != nil {
 		logUtil.LogFatalf("Cannot create file: %v", err)
