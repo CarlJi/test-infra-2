@@ -40,6 +40,7 @@ type PreSubmitEntry struct {
 	PostSubmitJob          string
 	PostSubmitCoverProfile string
 	CovThreshold           int
+	GithubCommentPrefix    string
 
 	Org     string
 	Repo    string
@@ -134,12 +135,13 @@ func (entry *PreSubmitEntry) RunPresubmit(arts *artifacts.LocalArtifacts) (bool,
 	changes := calc.NewGroupChanges(gBase, gNew)
 
 	// construct the content for github post
-	postContent, isEmpty, isCoverageLow := changes.ContentForGithubPost(concernedFiles)
+	commentFlag := fmt.Sprintf("**%s** %s", entry.GithubCommentPrefix, githubPr.CoverageCommentsPrefix)
+	postContent, isEmpty, isCoverageLow := changes.ContentForGithubPost(commentFlag, concernedFiles)
 
 	io.Write(&postContent, arts.Directory(), "bot-post")
 
 	if !isEmpty && entry.github != nil {
-		err = entry.github.CleanAndPostComment(postContent)
+		err = entry.github.CleanAndPostComment(commentFlag, postContent)
 	}
 
 	log.Println("completed PreSubmit.RunPresubmit(...)")

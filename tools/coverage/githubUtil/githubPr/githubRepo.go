@@ -86,7 +86,7 @@ func (data *GithubPr) postComment(content string) (err error) {
 }
 
 // Create a comment on the repo
-func (data *GithubPr) removeAllBotComments() (nRemoved int, err error) {
+func (data *GithubPr) removeAllBotComments(commentFlag string) (nRemoved int, err error) {
 	log.Println("removing all bot comments")
 	comments, _, err := data.GithubClient.Issues.ListComments(data.Ctx, data.RepoOwner, data.RepoName, data.Pr, nil)
 	if err != nil {
@@ -97,7 +97,7 @@ func (data *GithubPr) removeAllBotComments() (nRemoved int, err error) {
 	for _, cmt := range comments {
 		userName := *cmt.User.Login
 		// TODO(CarlJi): 因为有可能会用相同的github bot账号做多种事情，所以这里只删除coverage相关的comments
-		if userName == data.RobotUserName && strings.HasPrefix(cmt.GetBody(), CoverageCommentsPrefix) {
+		if userName == data.RobotUserName && strings.HasPrefix(cmt.GetBody(), commentFlag) {
 			log.Printf("TO DEL comment: <author=%s> %s\n", userName, *cmt.Body)
 			_, err = data.GithubClient.Issues.DeleteComment(
 				data.Ctx, data.RepoOwner, data.RepoName, cmt.GetID())
@@ -118,9 +118,9 @@ func (data *GithubPr) removeAllBotComments() (nRemoved int, err error) {
 }
 
 // Remove all existing bot comments, and then create a new comment on the repo
-func (data *GithubPr) CleanAndPostComment(content string) (err error) {
+func (data *GithubPr) CleanAndPostComment(commentFlag, content string) (err error) {
 	log.Printf("posting on PR *%v*\n", data.Pr)
-	_, err = data.removeAllBotComments()
+	_, err = data.removeAllBotComments(commentFlag)
 	if err != nil {
 		return
 	}

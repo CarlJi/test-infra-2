@@ -52,6 +52,7 @@ func main() {
 	postingBotUserName := flag.String("posting-robot", "qiniu-bot", "github user name for coverage robot")
 	remoteProfileName := flag.String("remote-profile-name", "filtered.cov", "code coverage profile file name in cloud")
 	qiniuConfig := flag.String("qiniu-credential", "/etc/qiniuconfig/qiniu.json", "path to credential file to access qiniu cloud")
+	githubCommentPrefix := flag.String("github-comment-prefix", "", "prefix flag that you can provide for github comments")
 	flag.Parse()
 
 	log.Printf("container flag list:  postSubmitJobName=%s; "+
@@ -119,6 +120,7 @@ func main() {
 		entry := PreSubmitEntry{
 			PostSubmitJob:          *postSubmitJobName,
 			PostSubmitCoverProfile: *remoteProfileName,
+			GithubCommentPrefix:    *githubCommentPrefix,
 
 			Org:     repoOwner,
 			Repo:    repoName,

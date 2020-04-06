@@ -23,7 +23,6 @@ import (
 	"sort"
 	"strings"
 
-	"knative.dev/test-infra/tools/coverage/githubUtil/githubPr"
 	"knative.dev/test-infra/tools/coverage/str"
 )
 
@@ -129,10 +128,10 @@ func NewGroupChanges(baseList *CoverageList, newList *CoverageList) *GroupChange
 
 // generateCoverDiffReport checks each entry in GroupChanges and see if it is
 // include in the github commit. If yes, then include that in the covbot report
-func (changes *GroupChanges) generateCoverDiffReport(githubFilePaths map[string]bool) (string, bool, bool) {
+func (changes *GroupChanges) generateCoverDiffReport(commentFlag string, githubFilePaths map[string]bool) (string, bool, bool) {
 	log.Printf("Finding joining set of changed files from profile[count=%d] & github\n", len(changes.Changed))
 	rows := []string{
-		githubPr.CoverageCommentsPrefix,
+		commentFlag,
 		fmt.Sprintf("Say `/test %s` to re-run this coverage report", os.Getenv("JOB_NAME")),
 		"",
 		"File | Old Coverage | New Coverage | Delta",
@@ -168,11 +167,11 @@ func (inc Incremental) githubBotRow(index int, filepath string) string {
 }
 
 // ContentForGithubPost constructs the message covbot posts
-func (changes *GroupChanges) ContentForGithubPost(files map[string]bool) (string, bool, bool) {
+func (changes *GroupChanges) ContentForGithubPost(commentFlag string, files map[string]bool) (string, bool, bool) {
 	log.Printf("%d files changed, reported by github:", len(files))
 	for githubFilePath := range files {
 		log.Printf("%s", githubFilePath)
 	}
 
-	return changes.generateCoverDiffReport(files)
+	return changes.generateCoverDiffReport(commentFlag, files)
 }
