@@ -52,6 +52,12 @@ func FindBaseProfileFromQiniu(qc *Client, prowJobName, covProfileName string) ([
 	if err != nil {
 		return nil, fmt.Errorf("error listing qiniu objects, prowjob:%v, err:%v", prowJobName, err)
 	}
+
+	if len(strBuilds) == 0 {
+		log.Printf("no cover profiles found from remote, do nothing")
+		return nil, nil
+	}
+
 	log.Printf("total sub dirs: %d", len(strBuilds))
 
 	builds := sortBuilds(strBuilds)

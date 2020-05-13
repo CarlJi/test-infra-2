@@ -123,7 +123,9 @@ func (entry *PreSubmitEntry) RunPresubmit(arts *artifacts.LocalArtifacts) (bool,
 	if err != nil {
 		logUtil.LogFatalf("failed to get remote cover profile, err:%v", err)
 	}
-
+	if remoteProfile == nil {
+		return false, nil
+	}
 	remoteProfileReader := artifacts.NewProfileReader(ioutil.NopCloser(bytes.NewReader(remoteProfile)))
 	// filter the remote cover profile base on files in PR list
 	gBase, err := calc.CovList(remoteProfileReader, nil, concernedFiles, entry.CovThreshold)
