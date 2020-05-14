@@ -59,6 +59,7 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64)
 		accessUrl := storage.MakePrivateURL(o.mac, o.cfg.Domain, o.key, deadline)
 		res, err = o.client.DoRequest(ctx, verb, accessUrl, headers)
 		if err != nil {
+			time.Sleep(time.Second) // # 丑陋的临时等待下
 			return true, err
 		}
 
