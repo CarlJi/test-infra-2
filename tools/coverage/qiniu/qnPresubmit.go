@@ -77,7 +77,7 @@ func FindBaseProfileFromQiniu(qc *Client, prowJobName, covProfileName string) ([
 	}
 
 	if profilePath == "" {
-		log.Printf("no cover profiles found from remote, do nothing")
+		log.Printf("no cover profiles found from remote job %s, do nothing", prowJobName)
 		return nil, nil
 	}
 
